@@ -7,8 +7,9 @@
 #include <QFileInfo>
 #include <QProcess>
 #include <QCoreApplication>
-#include <QTranslator>
 #include <QUrl>
+#include <QFileOpenEvent>
+#include <QDebug>
 
 #include "MainWindow.h"
 #include "BrowserManager.h"
@@ -43,11 +44,33 @@ static bool forwardToDefaultBrowserEnv(int argc, char* argv[]) {
     return ok;
 }
 
+// Custom QApplication to intercept QFileOpenEvent on macOS
+class BrowserChooserApp : public QApplication {
+public:
+    BrowserChooserApp(int &argc, char **argv)
+        : QApplication(argc, argv) {}
+
+    QString interceptedUrl;
+
+protected:
+    bool event(QEvent *e) override {
+#ifdef Q_OS_MAC
+        if (e->type() == QEvent::FileOpen) {
+            QFileOpenEvent *foe = static_cast<QFileOpenEvent *>(e);
+            interceptedUrl = foe->url().toString();
+            qDebug() << "Intercepted URL from macOS event:" << interceptedUrl;
+            return true;
+        }
+#endif
+        return QApplication::event(e);
+    }
+};
+
 int main(int argc, char *argv[]) {
     if (forwardToDefaultBrowserEnv(argc, argv))
         return 0;
 
-    QApplication app(argc, argv);
+    BrowserChooserApp app(argc, argv);
     QApplication::setOrganizationName(ORG);
     QApplication::setApplicationName(APP);
 
@@ -70,6 +93,13 @@ int main(int argc, char *argv[]) {
         const QStringList pos = parser.positionalArguments();
         if (!pos.isEmpty()) url = pos.first();
     }
+
+#ifdef Q_OS_MAC
+    // If no URL from command line, check intercepted event URL
+    if (url.isEmpty() && !app.interceptedUrl.isEmpty()) {
+        url = app.interceptedUrl;
+    }
+#endif
 
     BrowserManager mgr;
     ChoiceStore store;
