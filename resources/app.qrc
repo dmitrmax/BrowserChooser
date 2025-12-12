@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/i18n">
+    <!-- Translation files -->
+    <!-- <xfile>BrowserChooser_de_DE.qm</xfile>  -->
+    <!-- <xfile>BrowserChooser_ru_RU.qm</xfile>  -->
+  </qresource>
+</RCC>
