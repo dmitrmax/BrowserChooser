@@ -312,6 +312,10 @@ QString MainWindow::defaultHandlerForScheme(const QString& scheme) const {
     return QString();
 }
 
+#if defined(Q_OS_MAC)
+extern "C" { void setDefaultURLHandlerForHttpHttpsMac(); }
+#endif
+
 void MainWindow::checkAndOfferDefault() {
 #ifdef Q_OS_LINUX
     auto currentHttp = defaultHandlerForScheme("http");
@@ -337,7 +341,6 @@ void MainWindow::checkAndOfferDefault() {
     auto ret = QMessageBox::question(this, tr("Set default"),
         tr("Make Browser Chooser your default browser for http/https?"));
     if (ret == QMessageBox::Yes) {
-        extern void setDefaultURLHandlerForHttpHttpsMac();
         setDefaultURLHandlerForHttpHttpsMac();
         QMessageBox::information(this, tr("Done"), tr("Default browser updated."));
     }

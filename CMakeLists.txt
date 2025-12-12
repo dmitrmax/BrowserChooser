@@ -40,14 +40,17 @@ target_link_libraries(BrowserChooser PRIVATE ${QT_PACKAGE}::Widgets ${QT_PACKAGE
 
 # macOS: Objective-C++ bridge for default handler
 if(APPLE)
+  set(MACOSX_BUNDLE_INFO_PLIST ${CMAKE_SOURCE_DIR}/src/Info.plist.in)
+  
   set_source_files_properties(src/MacDefault.mm PROPERTIES
       COMPILE_FLAGS "-fobjc-arc")
   target_sources(BrowserChooser PRIVATE src/MacDefault.mm)
   target_link_libraries(BrowserChooser PRIVATE "-framework CoreServices" "-framework Foundation")
   set_target_properties(BrowserChooser PROPERTIES
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_GUI_IDENTIFIER "org.example.BrowserChooser"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.dmitrmax.BrowserChooser"
     MACOSX_BUNDLE_BUNDLE_NAME "BrowserChooser"
+    MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST}
   )
 endif()
 
