@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+"http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
   <key>CFBundleIdentifier</key>
   <string>com.github.dmitrmax.BrowserChooser</string>
 
@@ -15,6 +16,7 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
 
+  <!-- This tells macOS the app supports URLs -->
   <key>CFBundleURLTypes</key>
   <array>
     <dict>
@@ -27,8 +29,26 @@
       </array>
     </dict>
   </array>
-  
+
+  <!-- This tells macOS the app is a potential default browser -->
+  <key>LSHandlers</key>
+  <array>
+    <dict>
+      <key>LSHandlerRoleAll</key>
+      <string>com.github.dmitrmax.BrowserChooser</string>
+      <key>LSHandlerURLScheme</key>
+      <string>http</string>
+    </dict>
+    <dict>
+      <key>LSHandlerRoleAll</key>
+      <string>com.github.dmitrmax.BrowserChooser</string>
+      <key>LSHandlerURLScheme</key>
+      <string>https</string>
+    </dict>
+  </array>
+
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.web-browser</string>
+
 </dict>
 </plist>

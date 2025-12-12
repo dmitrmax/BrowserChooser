@@ -15,13 +15,14 @@ find_package(Qt6 COMPONENTS Widgets Core Gui LinguistTools REQUIRED)
 set(QT_PACKAGE Qt6)
 qt_standard_project_setup(I18N_SOURCE_LANGUAGE en I18N_TRANSLATED_LANGUAGES de_DE ru_RU)
 
+get_target_property(_qt_bin_dir Qt6::qmake IMPORTED_LOCATION)
+get_filename_component(QT_BIN_DIR "${_qt_bin_dir}" DIRECTORY)
+
 # ---- Translations ----
 # file(GLOB TRANSLATION_TS_FILES "${CMAKE_CURRENT_SOURCE_DIR}/translations/*.ts")
 
-# Генерация .qm через qt_add_translations
 # qt_add_translations(BrowserChooser TS_FILE_DIR "translations")
 
-# ---- Ресурсы ----
 qt_add_resources(APP_RESOURCES resources/app.qrc)
 
 add_executable(BrowserChooser
@@ -52,5 +53,11 @@ if(APPLE)
     MACOSX_BUNDLE_BUNDLE_NAME "BrowserChooser"
     MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST}
   )
+
+  add_custom_command(TARGET BrowserChooser POST_BUILD
+    COMMAND ${QT_BIN_DIR}/macdeployqt
+    "$<TARGET_FILE:BrowserChooser>"
+  )
+
 endif()
 
