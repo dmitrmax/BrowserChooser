@@ -114,10 +114,11 @@ int main(int argc, char *argv[]) {
         QString host = QUrl(url).host();
         QString cfgId = store.matchConfigIdForHost(host);
         if (!cfgId.isEmpty()) {
+            qInfo() << "Found rule" << cfgId << "for host" << host;
             BrowserConfig* cfg = mgr.findById(cfgId);
             if (cfg) {
                 QStringList args = cfg->buildArgsForUrl(url);
-                if (QProcess::startDetached(cfg->exePath, args)) {
+                if (QProcess::startDetached(cfg->exePath(), args)) {
                     return 0; // launched, exit immediately
                 }
             }

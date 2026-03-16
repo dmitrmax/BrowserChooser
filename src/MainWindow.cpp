@@ -121,8 +121,8 @@ void MainWindow::populateList() {
     m_list->clear();
     auto sorted = m_mgr->configsSortedByUsage(*m_store);
     for (const auto& c : sorted) {
-        auto* item = new QListWidgetItem(c.name, m_list);
-        item->setData(Qt::UserRole, c.id);
+        auto* item = new QListWidgetItem(c.name(), m_list);
+        item->setData(Qt::UserRole, c.id());
         item->setIcon(c.resolveIcon());
     }
 }
@@ -155,7 +155,7 @@ void MainWindow::onOpenClicked() {
         DomainMatchMode mode;
         QString key = currentDomainKey(&mode);
         if (!key.isEmpty()) {
-            ChoiceRule r{key, mode, cfg->id, 0};
+            ChoiceRule r{key, mode, cfg->id(), 0};
             m_store->setRule(r);
         }
     }
@@ -164,10 +164,10 @@ void MainWindow::onOpenClicked() {
 
 void MainWindow::launchConfig(const BrowserConfig& cfg, const QString& url) {
     QStringList args = cfg.buildArgsForUrl(url);
-    bool ok = QProcess::startDetached(cfg.exePath, args);
+    bool ok = QProcess::startDetached(cfg.exePath(), args);
     if (!ok) {
         QMessageBox::critical(this, tr("Launch failed"),
-                              tr("Failed to start %1").arg(cfg.name));
+                              tr("Failed to start %1").arg(cfg.name()));
         return;
     }
     // Terminate the whole app after launching
@@ -184,7 +184,7 @@ void MainWindow::onNewConfigClicked() {
     ConfigDialog dlg(this);
     if (dlg.exec() == QDialog::Accepted) {
         BrowserConfig cfg = dlg.getConfig();
-        if (cfg.name.isEmpty() || cfg.exePath.isEmpty()) return;
+        if (cfg.name().isEmpty() || cfg.exePath().isEmpty()) return;
         m_mgr->addUserConfig(cfg);
         populateList();
     }
@@ -195,7 +195,7 @@ void MainWindow::onEditConfigClicked() {
     if (!item) return;
     QString id = item->data(Qt::UserRole).toString();
     BrowserConfig* cfg = m_mgr->findById(id);
-    if (!cfg || cfg->isSystemDiscovered) {
+    if (!cfg || cfg->isSystemDiscovered()) {
         QMessageBox::information(this, tr("Info"), tr("System-discovered configs are read-only. Clone to customize."));
         return;
     }
@@ -203,7 +203,7 @@ void MainWindow::onEditConfigClicked() {
     dlg.setConfig(*cfg);
     if (dlg.exec() == QDialog::Accepted) {
         BrowserConfig edited = dlg.getConfig();
-        edited.id = cfg->id; // preserve ID
+        edited.setId(cfg->id()); // preserve ID
         m_mgr->updateUserConfig(edited);
         populateList();
     }
@@ -214,7 +214,7 @@ void MainWindow::onDeleteConfigClicked() {
     if (!item) return;
     QString id = item->data(Qt::UserRole).toString();
     BrowserConfig* cfg = m_mgr->findById(id);
-    if (!cfg || cfg->isSystemDiscovered) {
+    if (!cfg || cfg->isSystemDiscovered()) {
         QMessageBox::information(this, tr("Info"), tr("You can only delete custom (user) configurations."));
         return;
     }
@@ -232,16 +232,13 @@ void MainWindow::onCloneConfigClicked() {
     BrowserConfig* cfg = m_mgr->findById(id);
     if (!cfg) return;
 
-    BrowserConfig clone = *cfg;
-    clone.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    clone.name = tr("Copy of %1").arg(cfg->name);
-    clone.isSystemDiscovered = false;
+    BrowserConfig clone(tr("Copy of %1").arg(cfg->name()), cfg->exePath(), cfg->baseArgs(), cfg->iconSpec(), false);
 
     ConfigDialog dlg(this);
     dlg.setConfig(clone);
     if (dlg.exec() == QDialog::Accepted) {
         BrowserConfig finalCfg = dlg.getConfig();
-        if (finalCfg.name.isEmpty() || finalCfg.exePath.isEmpty()) return;
+        if (finalCfg.name().isEmpty() || finalCfg.exePath().isEmpty()) return;
         m_mgr->addUserConfig(finalCfg);
         populateList();
     }
@@ -255,7 +252,7 @@ void MainWindow::onCurrentItemChanged(QListWidgetItem *current, QListWidgetItem 
     BrowserConfig* cfg = m_mgr->findById(id);
     if (!cfg) return;
 
-    bool discovered = cfg->isSystemDiscovered;
+    bool discovered = cfg->isSystemDiscovered();
 
     m_editCfgBtn->setEnabled(!discovered);
     m_delCfgBtn->setEnabled(!discovered);

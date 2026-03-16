@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Browser Chooser
+Comment=Choose which browser (and profile) to open links with
+Exec=/usr/local/bin/browser-chooser %u
+Terminal=false
+Type=Application
+Categories=Network;Utility;
+MimeType=x-scheme-handler/http;x-scheme-handler/https;
+NoDisplay=false
+Icon=applications-internet

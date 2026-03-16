@@ -8,6 +8,7 @@ ChoiceStore::ChoiceStore() { load(); }
 
 QString ChoiceStore::matchConfigIdForHost(const QString& host) const {
     if (m_rules.contains(host)) return m_rules.value(host).configId;
+
     QString base = baseDomainFromHost(host);
     if (!base.isEmpty() && m_rules.contains(base)) return m_rules.value(base).configId;
     return QString();

@@ -37,7 +37,7 @@ void ChoiceEditorDialog::populate() {
         static const QString UNKNOWN(tr("<unknown>"));
 
         BrowserConfig* cfg = m_mgr->findById(r.configId);
-        auto& name = cfg ? cfg->name : UNKNOWN;
+        auto& name = cfg ? cfg->name() : UNKNOWN;
 
         QString mode = (r.mode == DomainMatchMode::BaseDomain) ? tr("base") : tr("host");
         auto* item = new QListWidgetItem(QString("%1 (%2) -> %3")

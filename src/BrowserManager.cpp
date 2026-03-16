@@ -37,16 +37,19 @@ QVector<BrowserConfig> BrowserManager::configsSortedByUsage(const ChoiceStore& s
     for (const auto& r : store.rules()) counts[r.configId] += 1;
     QVector<BrowserConfig> sorted = m_configs;
     std::sort(sorted.begin(), sorted.end(), [&](const BrowserConfig& a, const BrowserConfig& b){
-        int ca = counts.value(a.id, 0);
-        int cb = counts.value(b.id, 0);
-        if (ca == cb) return a.name.toLower() < b.name.toLower();
+        int ca = counts.value(a.id(), 0);
+        int cb = counts.value(b.id(), 0);
+        if (ca == cb) return a.name().toLower() < b.name().toLower();
         return ca > cb;
     });
     return sorted;
 }
 
 BrowserConfig* BrowserManager::findById(const QString& id) {
-    for (auto& c : m_configs) if (c.id == id) return &c;
+    for (auto& c : m_configs) {
+        qInfo() << "Browser config" << c.id() << "found";
+        if (c.id() == id) return &c;
+    }
     return nullptr;
 }
 
@@ -56,15 +59,7 @@ void BrowserManager::loadUserConfigs() {
     int n = s.beginReadArray("userConfigs");
     for (int i = 0; i < n; ++i) {
         s.setArrayIndex(i);
-        BrowserConfig c;
-        c.id = s.value("id", c.id).toString();
-        c.name = s.value("name").toString();
-        c.exePath = s.value("exePath").toString();
-        c.baseArgs = s.value("baseArgs").toStringList();
-        c.iconSpec = s.value("iconSpec").toString();
-        c.isSystemDiscovered = false;
-        if (!c.name.isEmpty() && !c.exePath.isEmpty())
-            m_userConfigs.push_back(c);
+        m_userConfigs.push_back(BrowserConfig::load(s));
     }
     s.endArray();
 }
@@ -74,12 +69,7 @@ void BrowserManager::saveUserConfigs() const {
     s.beginWriteArray("userConfigs");
     for (int i = 0; i < m_userConfigs.size(); ++i) {
         s.setArrayIndex(i);
-        const auto& c = m_userConfigs[i];
-        s.setValue("id", c.id);
-        s.setValue("name", c.name);
-        s.setValue("exePath", c.exePath);
-        s.setValue("baseArgs", c.baseArgs);
-        s.setValue("iconSpec", c.iconSpec);
+        m_userConfigs[i].save(s);
     }
     s.endArray();
 }
@@ -92,7 +82,7 @@ void BrowserManager::addUserConfig(const BrowserConfig& cfg) {
 
 void BrowserManager::updateUserConfig(const BrowserConfig& cfg) {
     for (auto& c : m_userConfigs) {
-        if (c.id == cfg.id) { c = cfg; break; }
+        if (c.id() == cfg.id()) { c = cfg; break; }
     }
     saveUserConfigs();
     load();
@@ -100,7 +90,7 @@ void BrowserManager::updateUserConfig(const BrowserConfig& cfg) {
 
 void BrowserManager::removeUserConfig(const QString& id) {
     m_userConfigs.erase(std::remove_if(m_userConfigs.begin(), m_userConfigs.end(),
-                        [&](const BrowserConfig& c){ return c.id == id; }),
+                        [&](const BrowserConfig& c){ return c.id() == id; }),
                         m_userConfigs.end());
     saveUserConfigs();
     load();
@@ -167,13 +157,7 @@ BrowserConfig BrowserManager::cfgFromDesktop(const DesktopEntry& de) {
         }
     }
 
-    BrowserConfig c;
-    c.name = de.name.isEmpty() ? de.id : de.name;
-    c.exePath = exePath;
-    c.baseArgs = args;
-    c.iconSpec = de.icon;
-    c.isSystemDiscovered = true;
-    return c;
+    return BrowserConfig(de.name.isEmpty() ? de.id : de.name, exePath, args, de.icon, true);
 }
 
 void BrowserManager::discoverLinux() {
@@ -186,7 +170,7 @@ void BrowserManager::discoverLinux() {
         DesktopEntry de;
         if (readDesktopEntry(id, &de)) {
             auto cfg = cfgFromDesktop(de);
-            if (!cfg.exePath.isEmpty())
+            if (!cfg.exePath().isEmpty())
                 m_systemConfigs.push_back(cfg);
         }
     }
@@ -260,13 +244,8 @@ QVector<BrowserManager::WinRegBrowser> BrowserManager::enumerateWindowsRegistry(
 void BrowserManager::discoverWindows() {
     auto regs = enumerateWindowsRegistry();
     for (const auto& rb : regs) {
-        BrowserConfig c;
-        c.name = rb.name;
-        c.exePath = rb.exe;
-        c.baseArgs = rb.args;
-        c.iconSpec = rb.iconPath.isEmpty() ? rb.exe : rb.iconPath;
-        c.isSystemDiscovered = true;
-        if (!c.exePath.isEmpty())
+        BrowserConfig c(rb.name, rb.exe, rb.args, rb.iconPath.isEmpty() ? rb.exe : rb.iconPath, true);
+        if (!c.exePath().isEmpty())
             m_systemConfigs.push_back(c);
     }
 }

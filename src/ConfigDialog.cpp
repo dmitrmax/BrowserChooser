@@ -43,25 +43,14 @@ ConfigDialog::ConfigDialog(QWidget* parent) : QDialog(parent) {
 }
 
 void ConfigDialog::setConfig(const BrowserConfig& cfg) {
-    m_name->setText(cfg.name);
-    m_exe->setText(cfg.exePath);
-    m_args->setText(cfg.baseArgs.join(' '));
-    m_icon->setText(cfg.iconSpec);
+    m_name->setText(cfg.name());
+    m_exe->setText(cfg.exePath());
+    m_args->setText(cfg.baseArgs().join(' '));
+    m_icon->setText(cfg.iconSpec());
 }
 
 BrowserConfig ConfigDialog::getConfig() const {
-    BrowserConfig cfg;
-    cfg.name = m_name->text();
-    cfg.exePath = m_exe->text();
-
-    QString argLine = m_args->text().trimmed();
-    if (!argLine.isEmpty()) {
-        cfg.baseArgs = QProcess::splitCommand(argLine);
-    }
-
-    cfg.iconSpec = m_icon->text();
-    cfg.isSystemDiscovered = false;
-    return cfg;
+    return BrowserConfig(m_name->text(), m_exe->text(), QProcess::splitCommand(m_args->text().trimmed()), m_icon->text(), false);
 }
 
 void ConfigDialog::onPickIcon() {
